@@ -8,6 +8,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <!-- 로그인/회원가입 모달 -->
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-box">
+            <h2 id="auth-title">로그인</h2>
+            <p id="auth-desc">다이어리를 이용하려면 로그인해주세요</p>
+            <form id="auth-form">
+                <input type="text" id="username" placeholder="아이디" required>
+                <input type="password" id="password" placeholder="비밀번호" required>
+                <button type="submit" id="auth-submit-btn">로그인</button>
+            </form>
+            <div class="auth-switch">
+                <span id="switch-text">계정이 없으신가요?</span>
+                <button id="auth-switch-btn">회원가입</button>
+            </div>
+        </div>
+    </div>
+
     <div class="app-container">
         <!-- 사이드바: 달력 및 요약 -->
         <aside class="sidebar">
@@ -32,8 +49,12 @@
         <!-- 메인: 선택한 날짜의 상세 내역 -->
         <main class="main-content">
             <header class="detail-header">
-                <h2 id="selected-date-display">2024년 3월 1일</h2>
+                <div class="header-top">
+                    <h2 id="selected-date-display">2024년 3월 1일</h2>
+                    <button id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+                </div>
                 <span id="day-of-week">금요일</span>
+                <p id="user-welcome" class="user-welcome"></p>
             </header>
 
             <div class="content-grid">
