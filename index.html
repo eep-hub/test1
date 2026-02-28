@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Life Planner - 가계부 & 일정</title>
+    <title>Life Planner - 커플 & 가계부</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -16,12 +16,56 @@
             <form id="auth-form">
                 <input type="text" id="username" placeholder="아이디" required>
                 <input type="password" id="password" placeholder="비밀번호" required>
+                <!-- 회원가입 시에만 나타나는 필드 -->
+                <div id="signup-fields" style="display: none; width: 100%;">
+                    <p class="input-hint">특수문자 1개, 영어, 숫자 포함 8자 이상</p>
+                    <input type="text" id="security-answer" placeholder="비밀번호 찾기 힌트: 나의 보물 1호는?">
+                </div>
                 <button type="submit" id="auth-submit-btn">로그인</button>
             </form>
-            <div class="auth-switch">
-                <span id="switch-text">계정이 없으신가요?</span>
-                <button id="auth-switch-btn">회원가입</button>
+            <div class="auth-footer">
+                <button id="find-pw-btn" class="text-link">비밀번호를 잊으셨나요?</button>
+                <div class="auth-switch">
+                    <span id="switch-text">계정이 없으신가요?</span>
+                    <button id="auth-switch-btn">회원가입</button>
+                </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 비밀번호 찾기 모달 -->
+    <div id="find-pw-overlay" class="auth-overlay" style="display: none;">
+        <div class="auth-box">
+            <h2>비밀번호 찾기</h2>
+            <p>아이디와 보안 질문의 답을 입력하세요</p>
+            <form id="find-pw-form">
+                <input type="text" id="find-username" placeholder="아이디" required>
+                <input type="text" id="find-answer" placeholder="보안 질문: 나의 보물 1호는?" required>
+                <button type="submit">비밀번호 확인</button>
+                <button type="button" onclick="closeModal('find-pw-overlay')" class="cancel-btn">취소</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 프로필 및 커플 설정 모달 -->
+    <div id="profile-overlay" class="auth-overlay" style="display: none;">
+        <div class="auth-box profile-box">
+            <h2>프로필 & 커플 설정</h2>
+            <div class="profile-section">
+                <h3>내 정보</h3>
+                <input type="text" id="display-name" placeholder="닉네임 설정">
+                <button onclick="updateProfile()">닉네임 저장</button>
+            </div>
+            <div class="couple-section">
+                <h3>커플 연동</h3>
+                <p class="input-hint">상대방의 아이디를 입력하여 연동하세요</p>
+                <div class="input-group">
+                    <input type="text" id="partner-id" placeholder="상대방 아이디">
+                    <button onclick="linkCouple()">연동하기</button>
+                </div>
+                <p id="couple-status" class="couple-status">연동된 파트너가 없습니다.</p>
+            </div>
+            <button onclick="closeModal('profile-overlay')" class="close-btn">닫기</button>
         </div>
     </div>
 
@@ -36,42 +80,47 @@
                 </div>
             </header>
             
-            <div id="calendar" class="calendar">
-                <!-- 달력이 자바스크립트로 생성됨 -->
-            </div>
+            <div id="calendar" class="calendar"></div>
 
             <div class="monthly-summary">
+                <div class="view-toggle" id="couple-view-toggle" style="display: none;">
+                    <button id="view-mine" class="active">내 데이터</button>
+                    <button id="view-partner">파트너 데이터</button>
+                </div>
                 <h3><i class="fas fa-chart-pie"></i> 이번 달 총 지출</h3>
                 <p id="total-monthly-expense">0원</p>
             </div>
         </aside>
 
-        <!-- 메인: 선택한 날짜의 상세 내역 -->
+        <!-- 메인: 상세 내역 -->
         <main class="main-content">
             <header class="detail-header">
                 <div class="header-top">
-                    <h2 id="selected-date-display">2024년 3월 1일</h2>
-                    <button id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+                    <div class="header-left">
+                        <h2 id="selected-date-display">2024년 3월 1일</h2>
+                        <span id="day-of-week">금요일</span>
+                    </div>
+                    <div class="header-right">
+                        <button onclick="openModal('profile-overlay')" class="icon-btn"><i class="fas fa-user-circle"></i> 프로필</button>
+                        <button id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+                    </div>
                 </div>
-                <span id="day-of-week">금요일</span>
                 <p id="user-welcome" class="user-welcome"></p>
             </header>
 
             <div class="content-grid">
-                <!-- 일정 관리 섹션 -->
                 <section class="planner-section schedule-box">
                     <h3><i class="fas fa-calendar-check"></i> 오늘의 일정</h3>
-                    <div class="input-group">
+                    <div class="input-group" id="schedule-input-area">
                         <input type="text" id="schedule-input" placeholder="새로운 일정을 입력하세요">
                         <button id="add-schedule-btn"><i class="fas fa-plus"></i></button>
                     </div>
                     <ul id="schedule-list" class="item-list"></ul>
                 </section>
 
-                <!-- 가계부 섹션 -->
                 <section class="planner-section expense-box">
                     <h3><i class="fas fa-won-sign"></i> 오늘의 가계부</h3>
-                    <div class="input-group multi-input">
+                    <div class="input-group multi-input" id="expense-input-area">
                         <input type="text" id="expense-desc" placeholder="내용">
                         <input type="number" id="expense-amount" placeholder="금액">
                         <button id="add-expense-btn"><i class="fas fa-plus"></i></button>
