@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Planner - 가계부 & 일정</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 사이드바: 달력 및 요약 -->
+        <aside class="sidebar">
+            <header class="planner-header">
+                <h1 id="current-month-year">2024년 3월</h1>
+                <div class="nav-btns">
+                    <button id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                    <button id="next-month"><i class="fas fa-chevron-right"></i></button>
+                </div>
+            </header>
+            
+            <div id="calendar" class="calendar">
+                <!-- 달력이 자바스크립트로 생성됨 -->
+            </div>
+
+            <div class="monthly-summary">
+                <h3><i class="fas fa-chart-pie"></i> 이번 달 총 지출</h3>
+                <p id="total-monthly-expense">0원</p>
+            </div>
+        </aside>
+
+        <!-- 메인: 선택한 날짜의 상세 내역 -->
+        <main class="main-content">
+            <header class="detail-header">
+                <h2 id="selected-date-display">2024년 3월 1일</h2>
+                <span id="day-of-week">금요일</span>
+            </header>
+
+            <div class="content-grid">
+                <!-- 일정 관리 섹션 -->
+                <section class="planner-section schedule-box">
+                    <h3><i class="fas fa-calendar-check"></i> 오늘의 일정</h3>
+                    <div class="input-group">
+                        <input type="text" id="schedule-input" placeholder="새로운 일정을 입력하세요">
+                        <button id="add-schedule-btn"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <ul id="schedule-list" class="item-list"></ul>
+                </section>
+
+                <!-- 가계부 섹션 -->
+                <section class="planner-section expense-box">
+                    <h3><i class="fas fa-won-sign"></i> 오늘의 가계부</h3>
+                    <div class="input-group multi-input">
+                        <input type="text" id="expense-desc" placeholder="내용">
+                        <input type="number" id="expense-amount" placeholder="금액">
+                        <button id="add-expense-btn"><i class="fas fa-plus"></i></button>
+                    </div>
+                    <ul id="expense-list" class="item-list"></ul>
+                    <div class="daily-total">
+                        소계: <span id="daily-total-amount">0</span>원
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script src="main.js"></script>
+</body>
+</html>
