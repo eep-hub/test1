@@ -45,9 +45,55 @@ body {
 .day.saturday { color: #4d94ff; }
 
 .holiday-name { font-size: 0.55rem; color: #ff4d4d; margin-bottom: 2px; }
-.day-summary { margin-top: auto; display: flex; flex-direction: column; align-items: center; }
-.summary-dot { width: 4px; height: 4px; background: var(--primary-color); border-radius: 50%; margin-bottom: 2px; }
-.summary-amount { font-size: 0.6rem; color: #ff4d4d; font-weight: 700; }
+.day-summary {
+    margin-top: 2px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 0 2px;
+    overflow: hidden;
+}
+
+.summary-schedule {
+    font-size: 0.55rem;
+    color: #4a5568;
+    background: #f1f3f5;
+    padding: 1px 3px;
+    border-radius: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 90%;
+}
+
+.summary-amount {
+    font-size: 0.6rem;
+    font-weight: 700;
+}
+
+.amt-in { color: #4d94ff; }  /* 입금: 파랑 */
+.amt-out { color: #ff4d4d; } /* 지출: 빨강 */
+
+/* Type Toggle Buttons */
+.type-toggle {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 5px;
+}
+
+.type-toggle button {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    background: white;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.type-toggle button#type-out.active { background: #fff0f0; color: #ff4d4d; border-color: #ff4d4d; }
+.type-toggle button#type-in.active { background: #f0f7ff; color: #4d94ff; border-color: #4d94ff; }
 
 /* Inline Detail (Compact View) */
 .inline-detail {

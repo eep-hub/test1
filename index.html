@@ -46,9 +46,13 @@
 
             <!-- 가계부 입력 폼 -->
             <div id="form-e" class="add-form" style="display: none;">
-                <input type="text" id="e-desc-input" placeholder="내용 (예: 점심식사)">
+                <div class="type-toggle">
+                    <button id="type-out" class="active" onclick="switchExpType('out')">지출 (-)</button>
+                    <button id="type-in" onclick="switchExpType('in')">입금 (+)</button>
+                </div>
+                <input type="text" id="e-desc-input" placeholder="내용 (예: 월급, 점심식사)">
                 <input type="number" id="e-amt-input" placeholder="금액 (원)">
-                <button onclick="handleAddExpense()" class="primary-btn">지출 추가</button>
+                <button onclick="handleAddExpense()" class="primary-btn">가계부 추가</button>
             </div>
         </div>
     </div>

@@ -6,6 +6,7 @@ let isGuest = (currentUser === 'guest');
 
 let currentDate = new Date();
 let selectedDate = null;
+let currentExpType = 'out'; // 'in' or 'out'
 
 const holidays = {
     "1-1": "신정", "2-9": "설날", "2-10": "설날", "2-11": "설날", "2-12": "대체공휴일",
@@ -28,14 +29,10 @@ function updateUIState() {
     const userWelcome = document.getElementById('user-welcome');
 
     if (isGuest) {
-        loginBtn.style.display = 'block';
-        logoutBtn.style.display = 'none';
-        trialBadge.style.display = 'inline-block';
+        loginBtn.style.display = 'block'; logoutBtn.style.display = 'none'; trialBadge.style.display = 'inline-block';
         userWelcome.textContent = "방문자님";
     } else {
-        loginBtn.style.display = 'none';
-        logoutBtn.style.display = 'block';
-        trialBadge.style.display = 'none';
+        loginBtn.style.display = 'none'; logoutBtn.style.display = 'block'; trialBadge.style.display = 'none';
         userWelcome.textContent = users[currentUser].profile?.nickname || currentUser;
     }
 }
@@ -74,7 +71,6 @@ function renderCalendar() {
     
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
-    
     for (let i = 0; i < firstDay; i++) calendarEl.appendChild(document.createElement('div'));
     
     for (let i = 1; i <= lastDate; i++) {
@@ -94,13 +90,36 @@ function renderCalendar() {
         if (dayOfWeek === 6) d.classList.add('saturday');
         if (year === new Date().getFullYear() && month === new Date().getMonth() && i === new Date().getDate()) d.classList.add('today');
         
+        // 요약 정보 (텍스트 그대로 표시)
         const summary = document.createElement('div'); summary.className = 'day-summary';
         const dayData = plannerData[dateKey];
         if (dayData) {
-            if (dayData.schedules?.length > 0) summary.innerHTML += '<div class="summary-dot"></div>';
-            if (dayData.expenses?.length > 0) {
-                const total = dayData.expenses.reduce((a, c) => a + c.amount, 0);
-                summary.innerHTML += `<span class="summary-amount">${total > 9999 ? (total/10000).toFixed(1)+'만' : total.toLocaleString()}</span>`;
+            // 일정 텍스트 (최대 2개)
+            if (dayData.schedules) {
+                dayData.schedules.slice(0, 2).forEach(s => {
+                    const sItem = document.createElement('div');
+                    sItem.className = 'summary-schedule';
+                    sItem.textContent = s;
+                    summary.appendChild(sItem);
+                });
+            }
+            // 금액 합산 (입금/지출 구분)
+            if (dayData.expenses && dayData.expenses.length > 0) {
+                const totalIn = dayData.expenses.filter(e => e.type === 'in').reduce((a, c) => a + c.amount, 0);
+                const totalOut = dayData.expenses.filter(e => e.type === 'out').reduce((a, c) => a + c.amount, 0);
+                
+                if (totalIn > 0) {
+                    const inSpan = document.createElement('span');
+                    inSpan.className = 'summary-amount amt-in';
+                    inSpan.textContent = `+${totalIn.toLocaleString()}`;
+                    summary.appendChild(inSpan);
+                }
+                if (totalOut > 0) {
+                    const outSpan = document.createElement('span');
+                    outSpan.className = 'summary-amount amt-out';
+                    outSpan.textContent = `-${totalOut.toLocaleString()}`;
+                    summary.appendChild(outSpan);
+                }
             }
         }
         d.appendChild(summary);
@@ -110,12 +129,19 @@ function renderCalendar() {
         }
 
         d.addEventListener('click', () => {
-            selectedDate = new Date(year, month, i);
-            document.getElementById('floating-add-btn').style.display = 'block';
+            // 토글 로직: 같은 날짜 누르면 null로 만들어 접기
+            if (selectedDate && selectedDate.getDate() === i && selectedDate.getMonth() === month) {
+                selectedDate = null;
+                document.getElementById('floating-add-btn').style.display = 'none';
+            } else {
+                selectedDate = new Date(year, month, i);
+                document.getElementById('floating-add-btn').style.display = 'block';
+            }
             renderCalendar();
         });
         calendarEl.appendChild(d);
 
+        // 주 확장 로직
         if (selectedDate && (dayOfWeek === 6 || i === lastDate)) {
             const weekStart = i - dayOfWeek;
             const weekEnd = i;
@@ -131,14 +157,12 @@ function injectInlineDetail(parent) {
     const template = document.getElementById('detail-template');
     const clone = template.content.cloneNode(true);
     const detailEl = clone.querySelector('.inline-detail');
-    
     const month = selectedDate.getMonth() + 1;
     const date = selectedDate.getDate();
     const dateKey = `${selectedDate.getFullYear()}-${month}-${date}`;
     const data = plannerData[dateKey] || { schedules: [], expenses: [] };
 
     detailEl.querySelector('.detail-date').textContent = `${month}월 ${date}일 내역`;
-    
     const sList = detailEl.querySelector('.s-list');
     data.schedules.forEach((s, idx) => {
         const li = document.createElement('li');
@@ -147,44 +171,24 @@ function injectInlineDetail(parent) {
     });
 
     const eList = detailEl.querySelector('.e-list');
-    let dailyTotal = 0;
+    let totalIn = 0, totalOut = 0;
     data.expenses.forEach((e, idx) => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>${e.desc}</span><span>${e.amount.toLocaleString()}원 <button class="delete-btn" onclick="deleteItem('${dateKey}', 'expenses', ${idx})">&times;</button></span>`;
+        const sign = e.type === 'in' ? '+' : '-';
+        const colorClass = e.type === 'in' ? 'amt-in' : 'amt-out';
+        li.innerHTML = `<span>${e.desc}</span><span class="${colorClass}">${sign}${e.amount.toLocaleString()}원 <button class="delete-btn" onclick="deleteItem('${dateKey}', 'expenses', ${idx})">&times;</button></span>`;
         eList.appendChild(li);
-        dailyTotal += e.amount;
+        if (e.type === 'in') totalIn += e.amount; else totalOut += e.amount;
     });
-    detailEl.querySelector('.d-total-amt').textContent = dailyTotal.toLocaleString();
-
+    detailEl.querySelector('.d-total-amt').textContent = (totalIn - totalOut).toLocaleString();
     parent.appendChild(detailEl);
 }
 
-// 모달 제어
-window.openModal = (id) => document.getElementById(id).style.display = 'flex';
-window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-
-window.openAddModal = () => {
-    if (!selectedDate) return;
-    const month = selectedDate.getMonth() + 1;
-    const date = selectedDate.getDate();
-    document.getElementById('add-item-title').textContent = `${month}월 ${date}일 기록하기`;
-    openModal('add-item-overlay');
-};
-
-window.switchAddTab = (type) => {
-    document.getElementById('tab-s').classList.toggle('active', type === 's');
-    document.getElementById('tab-e').classList.toggle('active', type === 'e');
-    document.getElementById('form-s').style.display = type === 's' ? 'flex' : 'none';
-    document.getElementById('form-e').style.display = type === 'e' ? 'flex' : 'none';
-};
-
-window.handleAddSchedule = () => {
-    const input = document.getElementById('s-input');
-    if (!input.value) return;
-    const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-    if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
-    plannerData[key].schedules.push(input.value);
-    input.value = ''; saveData(); renderCalendar(); closeModal('add-item-overlay');
+// 모달 및 입력 로직
+window.switchExpType = (type) => {
+    currentExpType = type;
+    document.getElementById('type-out').classList.toggle('active', type === 'out');
+    document.getElementById('type-in').classList.toggle('active', type === 'in');
 };
 
 window.handleAddExpense = () => {
@@ -193,32 +197,35 @@ window.handleAddExpense = () => {
     if (!desc.value || !amt.value) return;
     const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
     if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
-    plannerData[key].expenses.push({ desc: desc.value, amount: parseInt(amt.value) });
+    plannerData[key].expenses.push({ desc: desc.value, amount: parseInt(amt.value), type: currentExpType });
     desc.value = ''; amt.value = ''; saveData(); renderCalendar(); closeModal('add-item-overlay');
 };
 
-window.closeDetail = () => {
-    selectedDate = null;
-    document.getElementById('floating-add-btn').style.display = 'none';
-    renderCalendar();
+// 나머지 함수들은 그대로... (handleAddSchedule, openAddModal 등)
+window.openAddModal = () => { if (!selectedDate) return; openModal('add-item-overlay'); };
+window.switchAddTab = (type) => {
+    document.getElementById('tab-s').classList.toggle('active', type === 's');
+    document.getElementById('tab-e').classList.toggle('active', type === 'e');
+    document.getElementById('form-s').style.display = type === 's' ? 'flex' : 'none';
+    document.getElementById('form-e').style.display = type === 'e' ? 'flex' : 'none';
 };
-
-window.deleteItem = (key, type, idx) => {
-    plannerData[key][type].splice(idx, 1);
-    saveData(); renderCalendar();
+window.handleAddSchedule = () => {
+    const input = document.getElementById('s-input'); if (!input.value) return;
+    const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+    if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
+    plannerData[key].schedules.push(input.value);
+    input.value = ''; saveData(); renderCalendar(); closeModal('add-item-overlay');
 };
-
+window.closeDetail = () => { selectedDate = null; document.getElementById('floating-add-btn').style.display = 'none'; renderCalendar(); };
+window.deleteItem = (key, type, idx) => { plannerData[key][type].splice(idx, 1); saveData(); renderCalendar(); };
 function updateMonthlyTotal() {
-    let total = 0;
-    const prefix = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-`;
-    for (let k in plannerData) if (k.startsWith(prefix)) (plannerData[k].expenses || []).forEach(e => total += e.amount);
+    let total = 0; const prefix = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-`;
+    for (let k in plannerData) if (k.startsWith(prefix)) (plannerData[k].expenses || []).forEach(e => { if (e.type === 'in') total += e.amount; else total -= e.amount; });
     document.getElementById('total-monthly-expense').textContent = total.toLocaleString();
 }
-
 function setupEventListeners() {
     document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); closeDetail(); };
     document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); closeDetail(); };
     document.getElementById('logout-btn').onclick = () => { localStorage.setItem('currentUser', 'guest'); location.reload(); };
 }
-
 init();
