@@ -2,18 +2,17 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Life Planner - 커플 & 가계부</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Life Planner - 모바일 다이어리</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <!-- 로그인/회원가입 모달 (기본 숨김) -->
+<body class="mobile-mode">
+    <!-- 모달 레이어들 (이전과 동일) -->
     <div id="auth-overlay" class="auth-overlay" style="display: none;">
         <div class="auth-box">
             <button class="close-auth" onclick="closeModal('auth-overlay')">&times;</button>
             <h2 id="auth-title">로그인</h2>
-            <p id="auth-desc">다이어리를 이용하려면 로그인해주세요</p>
             <form id="auth-form">
                 <input type="text" id="username" placeholder="아이디" required>
                 <input type="password" id="password" placeholder="비밀번호" required>
@@ -21,13 +20,12 @@
                     <p class="input-hint">특수문자 1개, 영어, 숫자 포함 8자 이상</p>
                     <input type="text" id="security-answer" placeholder="비밀번호 찾기 힌트: 나의 보물 1호는?">
                 </div>
-                <button type="submit" id="auth-submit-btn">로그인</button>
+                <button type="submit" id="auth-submit-btn" class="primary-btn">로그인</button>
             </form>
             <div class="auth-footer">
-                <button id="find-pw-btn" class="text-link">비밀번호를 잊으셨나요?</button>
+                <button id="find-pw-btn" class="text-link">비밀번호 찾기</button>
                 <div class="auth-switch">
-                    <span id="switch-text">계정이 없으신가요?</span>
-                    <button id="auth-switch-btn">회원가입</button>
+                    <button id="auth-switch-btn">회원가입 하기</button>
                 </div>
             </div>
         </div>
@@ -37,99 +35,105 @@
     <div id="find-pw-overlay" class="auth-overlay" style="display: none;">
         <div class="auth-box">
             <h2>비밀번호 찾기</h2>
-            <p>아이디와 보안 질문의 답을 입력하세요</p>
             <form id="find-pw-form">
                 <input type="text" id="find-username" placeholder="아이디" required>
-                <input type="text" id="find-answer" placeholder="보안 질문: 나의 보물 1호는?" required>
-                <button type="submit">비밀번호 확인</button>
+                <input type="text" id="find-answer" placeholder="나의 보물 1호는?" required>
+                <button type="submit" class="primary-btn">비밀번호 확인</button>
                 <button type="button" onclick="closeModal('find-pw-overlay')" class="cancel-btn">취소</button>
             </form>
         </div>
     </div>
 
-    <!-- 프로필 및 커플 설정 모달 -->
+    <!-- 프로필 모달 -->
     <div id="profile-overlay" class="auth-overlay" style="display: none;">
         <div class="auth-box profile-box">
-            <h2>프로필 & 커플 설정</h2>
+            <h2>설정</h2>
             <div class="profile-section">
-                <h3>내 정보</h3>
-                <input type="text" id="display-name" placeholder="닉네임 설정">
-                <button onclick="updateProfile()">닉네임 저장</button>
+                <label>닉네임</label>
+                <input type="text" id="display-name" placeholder="닉네임">
+                <button onclick="updateProfile()" class="small-btn">저장</button>
             </div>
             <div class="couple-section">
-                <h3>커플 연동</h3>
-                <p class="input-hint">상대방의 아이디를 입력하면 일정이 공유됩니다.</p>
-                <div class="input-group">
-                    <input type="text" id="partner-id" placeholder="상대방 아이디">
-                    <button onclick="linkCouple()">연동하기</button>
-                </div>
-                <p id="couple-status" class="couple-status">연동된 파트너가 없습니다.</p>
+                <label>커플 연동</label>
+                <input type="text" id="partner-id" placeholder="상대방 아이디">
+                <button onclick="linkCouple()" class="small-btn">연동</button>
+                <p id="couple-status" class="couple-status"></p>
             </div>
             <button onclick="closeModal('profile-overlay')" class="close-btn">닫기</button>
         </div>
     </div>
 
-    <div class="app-container">
-        <aside class="sidebar">
-            <header class="planner-header">
-                <h1 id="current-month-year">2024년 3월</h1>
-                <div class="nav-btns">
+    <div class="mobile-container">
+        <!-- 상단 헤더 -->
+        <header class="mobile-header">
+            <div id="user-welcome" class="user-welcome">방문자님</div>
+            <div class="header-right">
+                <button id="login-nav-btn" class="login-nav-btn" onclick="openModal('auth-overlay')">로그인</button>
+                <button id="profile-btn" onclick="openModal('profile-overlay')" class="icon-btn" style="display: none;"><i class="fas fa-cog"></i></button>
+                <button id="logout-btn" class="icon-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </header>
+
+        <!-- 메인 컨텐츠 영역 -->
+        <main class="content-area">
+            <!-- 섹션 1: 달력 (기본 화면) -->
+            <section id="calendar-section" class="app-section active">
+                <div class="calendar-header">
                     <button id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                    <h2 id="current-month-year">2024년 3월</h2>
                     <button id="next-month"><i class="fas fa-chevron-right"></i></button>
                 </div>
-            </header>
-            
-            <div id="calendar" class="calendar"></div>
+                <div id="calendar" class="calendar"></div>
+                <div id="trial-badge" class="trial-badge" style="display: none;">체험판</div>
+            </section>
 
-            <div class="monthly-summary">
-                <!-- 커플 배지 제거됨 -->
-                <h3><i class="fas fa-chart-pie"></i> 이번 달 총 지출</h3>
-                <p id="total-monthly-expense">0원</p>
-            </div>
-        </aside>
-
-        <main class="main-content">
-            <header class="detail-header">
-                <div class="header-top">
-                    <div class="header-left">
-                        <h2 id="selected-date-display">2024년 3월 1일</h2>
-                        <span id="day-of-week">금요일</span>
+            <!-- 섹션 2: 상세 내역 (날짜 클릭 시 이동 또는 아래에 표시) -->
+            <section id="detail-section" class="app-section">
+                <div class="detail-header-mobile">
+                    <h3 id="selected-date-display">3월 1일</h3>
+                    <span id="day-of-week">금요일</span>
+                </div>
+                
+                <div class="mobile-grid">
+                    <div class="mobile-card">
+                        <h4><i class="fas fa-calendar-check"></i> 일정</h4>
+                        <div class="mobile-input-group">
+                            <input type="text" id="schedule-input" placeholder="할 일 추가">
+                            <button id="add-schedule-btn"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <ul id="schedule-list" class="item-list"></ul>
                     </div>
-                    <div class="header-right">
-                        <button id="login-nav-btn" class="login-nav-btn" onclick="openModal('auth-overlay')">로그인/회원가입</button>
-                        <button id="profile-btn" onclick="openModal('profile-overlay')" class="icon-btn" style="display: none;"><i class="fas fa-user-circle"></i> 프로필</button>
-                        <button id="logout-btn" class="logout-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+
+                    <div class="mobile-card">
+                        <h4><i class="fas fa-won-sign"></i> 가계부</h4>
+                        <div class="mobile-input-group">
+                            <input type="text" id="expense-desc" placeholder="내용">
+                            <input type="number" id="expense-amount" placeholder="금액">
+                            <button id="add-expense-btn"><i class="fas fa-plus"></i></button>
+                        </div>
+                        <ul id="expense-list" class="item-list"></ul>
+                        <div class="mobile-total">합계: <span id="daily-total-amount">0</span>원</div>
                     </div>
                 </div>
-                <p id="user-welcome" class="user-welcome"></p>
-                <div id="trial-badge" class="trial-badge">체험판 (데이터가 저장되지 않습니다)</div>
-            </header>
-
-            <div class="content-grid">
-                <section class="planner-section schedule-box">
-                    <h3><i class="fas fa-calendar-check"></i> 오늘의 일정</h3>
-                    <div class="input-group">
-                        <input type="text" id="schedule-input" placeholder="새로운 일정을 입력하세요">
-                        <button id="add-schedule-btn"><i class="fas fa-plus"></i></button>
-                    </div>
-                    <ul id="schedule-list" class="item-list"></ul>
-                </section>
-
-                <section class="planner-section expense-box">
-                    <h3><i class="fas fa-won-sign"></i> 오늘의 가계부</h3>
-                    <div class="input-group multi-input">
-                        <input type="text" id="expense-desc" placeholder="내용">
-                        <input type="number" id="expense-amount" placeholder="금액">
-                        <button id="add-expense-btn"><i class="fas fa-plus"></i></button>
-                    </div>
-                    <ul id="expense-list" class="item-list"></ul>
-                    <div class="daily-total">
-                        소계: <span id="daily-total-amount">0</span>원
-                    </div>
-                </section>
-            </div>
+            </section>
         </main>
+
+        <!-- 하단 탭 바 -->
+        <nav class="bottom-nav">
+            <button onclick="switchSection('calendar-section')" class="nav-item active" id="nav-calendar">
+                <i class="fas fa-calendar-alt"></i>
+                <span>달력</span>
+            </button>
+            <button onclick="switchSection('detail-section')" class="nav-item" id="nav-detail">
+                <i class="fas fa-list-ul"></i>
+                <span>상세내역</span>
+            </button>
+            <div class="monthly-stat-min">
+                월 지출: <span id="total-monthly-expense">0</span>원
+            </div>
+        </nav>
     </div>
+
     <script src="main.js"></script>
 </body>
 </html>
