@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="mobile-mode">
-    <!-- 모달 레이어들 -->
+    <!-- 로그인/회원가입 모달 -->
     <div id="auth-overlay" class="auth-overlay" style="display: none;">
         <div class="auth-box">
             <button class="close-auth" onclick="closeModal('auth-overlay')">&times;</button>
@@ -27,22 +27,29 @@
         </div>
     </div>
 
-    <!-- 프로필 모달 -->
-    <div id="profile-overlay" class="auth-overlay" style="display: none;">
-        <div class="auth-box profile-box">
-            <h2>설정</h2>
-            <div class="profile-section">
-                <label>닉네임</label>
-                <input type="text" id="display-name">
-                <button onclick="updateProfile()" class="small-btn">저장</button>
+    <!-- 입력 전용 모달 (추가 버튼 누르면 나타남) -->
+    <div id="add-item-overlay" class="auth-overlay" style="display: none;">
+        <div class="auth-box add-item-box">
+            <button class="close-auth" onclick="closeModal('add-item-overlay')">&times;</button>
+            <h2 id="add-item-title">3월 1일 기록하기</h2>
+            
+            <div class="tabs">
+                <button id="tab-s" class="active" onclick="switchAddTab('s')">일정</button>
+                <button id="tab-e" onclick="switchAddTab('e')">가계부</button>
             </div>
-            <div class="couple-section">
-                <label>커플 연동</label>
-                <input type="text" id="partner-id" placeholder="상대방 아이디">
-                <button onclick="linkCouple()" class="small-btn">연동</button>
-                <p id="couple-status" class="couple-status"></p>
+
+            <!-- 일정 입력 폼 -->
+            <div id="form-s" class="add-form">
+                <input type="text" id="s-input" placeholder="할 일을 입력하세요">
+                <button onclick="handleAddSchedule()" class="primary-btn">일정 추가</button>
             </div>
-            <button onclick="closeModal('profile-overlay')" class="close-btn">닫기</button>
+
+            <!-- 가계부 입력 폼 -->
+            <div id="form-e" class="add-form" style="display: none;">
+                <input type="text" id="e-desc-input" placeholder="내용 (예: 점심식사)">
+                <input type="number" id="e-amt-input" placeholder="금액 (원)">
+                <button onclick="handleAddExpense()" class="primary-btn">지출 추가</button>
+            </div>
         </div>
     </div>
 
@@ -55,7 +62,6 @@
             </div>
             <div class="header-right">
                 <button id="login-nav-btn" class="login-nav-btn" onclick="openModal('auth-overlay')">로그인</button>
-                <button id="profile-btn" onclick="openModal('profile-overlay')" class="icon-btn" style="display: none;"><i class="fas fa-cog"></i></button>
                 <button id="logout-btn" class="icon-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </header>
@@ -72,37 +78,33 @@
                 <!-- 달력 날짜와 인라인 상세창이 이곳에 생성됨 -->
             </div>
 
-            <div class="monthly-summary-bar">
-                이번 달 총 지출: <span id="total-monthly-expense">0</span>원
+            <div class="bottom-area">
+                <div class="monthly-summary-bar">
+                    이번 달 총 지출: <span id="total-monthly-expense">0</span>원
+                </div>
+                <button id="floating-add-btn" class="floating-add-btn" style="display: none;" onclick="openAddModal()">
+                    <i class="fas fa-plus"></i> 기록 추가
+                </button>
             </div>
         </main>
     </div>
 
-    <!-- 인라인 상세 내역 템플릿 (JS에서 복사하여 사용) -->
+    <!-- 인라인 상세 내역 템플릿 (입력창 제거 버전) -->
     <template id="detail-template">
         <div class="inline-detail">
             <div class="detail-header">
-                <h3 class="detail-date">3월 1일</h3>
+                <h3 class="detail-date">3월 1일 상세내역</h3>
                 <button class="close-detail" onclick="closeDetail()">&times;</button>
             </div>
-            <div class="detail-grid">
-                <div class="detail-card">
+            <div class="detail-content">
+                <div class="detail-list-section">
                     <h4><i class="fas fa-calendar-check"></i> 일정</h4>
-                    <div class="mini-input-group">
-                        <input type="text" class="schedule-in" placeholder="할 일 추가">
-                        <button class="add-s-btn"><i class="fas fa-plus"></i></button>
-                    </div>
                     <ul class="s-list item-list"></ul>
                 </div>
-                <div class="detail-card">
+                <div class="detail-list-section">
                     <h4><i class="fas fa-won-sign"></i> 가계부</h4>
-                    <div class="mini-input-group">
-                        <input type="text" class="exp-desc-in" placeholder="내용">
-                        <input type="number" class="exp-amt-in" placeholder="금액">
-                        <button class="add-e-btn"><i class="fas fa-plus"></i></button>
-                    </div>
                     <ul class="e-list item-list"></ul>
-                    <div class="day-total">합계: <span class="d-total-amt">0</span>원</div>
+                    <div class="day-total">소계: <span class="d-total-amt">0</span>원</div>
                 </div>
             </div>
         </div>

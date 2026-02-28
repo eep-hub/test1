@@ -5,7 +5,7 @@ let plannerData = {};
 let isGuest = (currentUser === 'guest');
 
 let currentDate = new Date();
-let selectedDate = null; // 초기에는 선택된 날짜 없음
+let selectedDate = null;
 
 const holidays = {
     "1-1": "신정", "2-9": "설날", "2-10": "설날", "2-11": "설날", "2-12": "대체공휴일",
@@ -23,21 +23,18 @@ function init() {
 
 function updateUIState() {
     const loginBtn = document.getElementById('login-nav-btn');
-    const profileBtn = document.getElementById('profile-btn');
     const logoutBtn = document.getElementById('logout-btn');
     const trialBadge = document.getElementById('trial-badge');
     const userWelcome = document.getElementById('user-welcome');
 
     if (isGuest) {
         loginBtn.style.display = 'block';
-        profileBtn.style.display = 'none';
         logoutBtn.style.display = 'none';
         trialBadge.style.display = 'inline-block';
         userWelcome.textContent = "방문자님";
     } else {
         loginBtn.style.display = 'none';
-        profileBtn.style.display = 'inline-block';
-        logoutBtn.style.display = 'inline-block';
+        logoutBtn.style.display = 'block';
         trialBadge.style.display = 'none';
         userWelcome.textContent = users[currentUser].profile?.nickname || currentUser;
     }
@@ -68,7 +65,6 @@ function renderCalendar() {
     const month = currentDate.getMonth();
     document.getElementById('current-month-year').textContent = `${year}년 ${month + 1}월`;
     
-    // 요일 헤더
     ['일','월','화','수','목','금','토'].forEach(day => {
         const h = document.createElement('div'); h.className = 'day-header'; h.textContent = day;
         if (day === '일') h.style.color = '#ff4d4d';
@@ -79,21 +75,18 @@ function renderCalendar() {
     const firstDay = new Date(year, month, 1).getDay();
     const lastDate = new Date(year, month + 1, 0).getDate();
     
-    // 빈 칸
     for (let i = 0; i < firstDay; i++) calendarEl.appendChild(document.createElement('div'));
     
-    // 날짜 생성
     for (let i = 1; i <= lastDate; i++) {
         const d = document.createElement('div');
         d.className = 'day';
-        const dateObj = new Date(year, month, i);
-        const dayOfWeek = dateObj.getDay();
         const dateKey = `${year}-${month + 1}-${i}`;
         const holidayKey = `${month + 1}-${i}`;
+        const dayOfWeek = new Date(year, month, i).getDay();
 
         if (holidays[holidayKey]) {
             const h = document.createElement('span'); h.className = 'holiday-name'; h.textContent = holidays[holidayKey];
-            d.appendChild(h); d.classList.add('holiday');
+            d.appendChild(h);
         }
 
         const dNum = document.createElement('span'); dNum.textContent = i; d.appendChild(dNum);
@@ -101,7 +94,6 @@ function renderCalendar() {
         if (dayOfWeek === 6) d.classList.add('saturday');
         if (year === new Date().getFullYear() && month === new Date().getMonth() && i === new Date().getDate()) d.classList.add('today');
         
-        // 요약 정보
         const summary = document.createElement('div'); summary.className = 'day-summary';
         const dayData = plannerData[dateKey];
         if (dayData) {
@@ -119,19 +111,12 @@ function renderCalendar() {
 
         d.addEventListener('click', () => {
             selectedDate = new Date(year, month, i);
+            document.getElementById('floating-add-btn').style.display = 'block';
             renderCalendar();
         });
         calendarEl.appendChild(d);
 
-        // 선택된 날짜의 주(row)가 끝나는 지점에 인라인 상세창 삽입
-        const isSelectedInThisWeek = selectedDate && 
-                                   selectedDate.getFullYear() === year && 
-                                   selectedDate.getMonth() === month && 
-                                   selectedDate.getDate() === i;
-        
-        // 주의 마지막 날(토요일)이거나 월의 마지막 날인 경우
         if (selectedDate && (dayOfWeek === 6 || i === lastDate)) {
-            // 현재 주에 선택된 날짜가 포함되어 있는지 확인
             const weekStart = i - dayOfWeek;
             const weekEnd = i;
             if (selectedDate.getDate() >= weekStart && selectedDate.getDate() <= weekEnd && selectedDate.getMonth() === month) {
@@ -147,15 +132,13 @@ function injectInlineDetail(parent) {
     const clone = template.content.cloneNode(true);
     const detailEl = clone.querySelector('.inline-detail');
     
-    const year = selectedDate.getFullYear();
     const month = selectedDate.getMonth() + 1;
     const date = selectedDate.getDate();
-    const dateKey = `${year}-${month}-${date}`;
+    const dateKey = `${selectedDate.getFullYear()}-${month}-${date}`;
     const data = plannerData[dateKey] || { schedules: [], expenses: [] };
 
-    detailEl.querySelector('.detail-date').textContent = `${month}월 ${date}일 상세내역`;
+    detailEl.querySelector('.detail-date').textContent = `${month}월 ${date}일 내역`;
     
-    // 일정 리스트
     const sList = detailEl.querySelector('.s-list');
     data.schedules.forEach((s, idx) => {
         const li = document.createElement('li');
@@ -163,7 +146,6 @@ function injectInlineDetail(parent) {
         sList.appendChild(li);
     });
 
-    // 가계부 리스트
     const eList = detailEl.querySelector('.e-list');
     let dailyTotal = 0;
     data.expenses.forEach((e, idx) => {
@@ -174,29 +156,50 @@ function injectInlineDetail(parent) {
     });
     detailEl.querySelector('.d-total-amt').textContent = dailyTotal.toLocaleString();
 
-    // 버튼 이벤트 연결
-    detailEl.querySelector('.add-s-btn').onclick = () => {
-        const input = detailEl.querySelector('.schedule-in');
-        if (!input.value) return;
-        if (!plannerData[dateKey]) plannerData[dateKey] = { schedules: [], expenses: [] };
-        plannerData[dateKey].schedules.push(input.value);
-        saveData(); renderCalendar();
-    };
-
-    detailEl.querySelector('.add-e-btn').onclick = () => {
-        const desc = detailEl.querySelector('.exp-desc-in');
-        const amt = detailEl.querySelector('.exp-amt-in');
-        if (!desc.value || !amt.value) return;
-        if (!plannerData[dateKey]) plannerData[dateKey] = { schedules: [], expenses: [] };
-        plannerData[dateKey].expenses.push({ desc: desc.value, amount: parseInt(amt.value) });
-        saveData(); renderCalendar();
-    };
-
     parent.appendChild(detailEl);
 }
 
+// 모달 제어
+window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+window.openAddModal = () => {
+    if (!selectedDate) return;
+    const month = selectedDate.getMonth() + 1;
+    const date = selectedDate.getDate();
+    document.getElementById('add-item-title').textContent = `${month}월 ${date}일 기록하기`;
+    openModal('add-item-overlay');
+};
+
+window.switchAddTab = (type) => {
+    document.getElementById('tab-s').classList.toggle('active', type === 's');
+    document.getElementById('tab-e').classList.toggle('active', type === 'e');
+    document.getElementById('form-s').style.display = type === 's' ? 'flex' : 'none';
+    document.getElementById('form-e').style.display = type === 'e' ? 'flex' : 'none';
+};
+
+window.handleAddSchedule = () => {
+    const input = document.getElementById('s-input');
+    if (!input.value) return;
+    const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+    if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
+    plannerData[key].schedules.push(input.value);
+    input.value = ''; saveData(); renderCalendar(); closeModal('add-item-overlay');
+};
+
+window.handleAddExpense = () => {
+    const desc = document.getElementById('e-desc-input');
+    const amt = document.getElementById('e-amt-input');
+    if (!desc.value || !amt.value) return;
+    const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+    if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
+    plannerData[key].expenses.push({ desc: desc.value, amount: parseInt(amt.value) });
+    desc.value = ''; amt.value = ''; saveData(); renderCalendar(); closeModal('add-item-overlay');
+};
+
 window.closeDetail = () => {
     selectedDate = null;
+    document.getElementById('floating-add-btn').style.display = 'none';
     renderCalendar();
 };
 
@@ -212,28 +215,10 @@ function updateMonthlyTotal() {
     document.getElementById('total-monthly-expense').textContent = total.toLocaleString();
 }
 
-// 모달 및 기타 설정 (이전과 유사)
-window.openModal = (id) => document.getElementById(id).style.display = 'flex';
-window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-
 function setupEventListeners() {
-    document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); selectedDate = null; renderCalendar(); };
-    document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); selectedDate = null; renderCalendar(); };
-    
-    document.getElementById('auth-form').onsubmit = (e) => {
-        e.preventDefault();
-        const id = e.target.username.value;
-        const pw = e.target.password.value;
-        if (users[id] && users[id].password === pw) {
-            localStorage.setItem('currentUser', id);
-            location.reload();
-        } else alert('정보가 올바르지 않습니다.');
-    };
-
-    document.getElementById('logout-btn').onclick = () => {
-        localStorage.setItem('currentUser', 'guest');
-        location.reload();
-    };
+    document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); closeDetail(); };
+    document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); closeDetail(); };
+    document.getElementById('logout-btn').onclick = () => { localStorage.setItem('currentUser', 'guest'); location.reload(); };
 }
 
 init();
