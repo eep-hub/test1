@@ -1,16 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lotto Number Generator</title>
+    <title>프리미엄 로또 번호 생성기</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
+    <button id="dark-mode-toggle" class="theme-btn">
+        <i class="fas fa-moon"></i>
+    </button>
+
     <div class="container">
-        <h1>Lotto Number Generator</h1>
-        <button id="generate-btn">Generate Numbers</button>
-        <div id="lotto-numbers" class="lotto-numbers-container"></div>
+        <header>
+            <h1><i class="fas fa-ticket-alt"></i> LOTTO 6/45</h1>
+            <p class="subtitle">당신의 행운을 확인해보세요</p>
+        </header>
+
+        <div class="action-area">
+            <button id="generate-btn">번호 생성하기</button>
+        </div>
+
+        <div id="lotto-numbers" class="lotto-numbers-container">
+            <!-- 번호가 여기에 생성됩니다 -->
+        </div>
     </div>
     <script src="main.js"></script>
 </body>
