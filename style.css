@@ -287,9 +287,49 @@ button:hover {
     width: 100%;
     max-width: 400px;
     text-align: center;
+    position: relative;
 }
 
-.auth-box h2 {
+.close-auth {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.guest-hint {
+    margin-top: 15px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.guest-hint:hover {
+    color: var(--primary-color);
+}
+
+.couple-badge {
+    background: #fff0f6;
+    color: #ff3366;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 1rem;
+    border: 1px solid #ffccd5;
+}
+
+.cancel-btn, .close-btn {
+
     font-size: 2rem;
     margin: 0 0 10px;
     color: var(--text-main);

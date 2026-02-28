@@ -11,12 +11,12 @@
     <!-- 로그인/회원가입 모달 -->
     <div id="auth-overlay" class="auth-overlay">
         <div class="auth-box">
+            <button class="close-auth" onclick="guestMode()">&times;</button>
             <h2 id="auth-title">로그인</h2>
             <p id="auth-desc">다이어리를 이용하려면 로그인해주세요</p>
             <form id="auth-form">
                 <input type="text" id="username" placeholder="아이디" required>
                 <input type="password" id="password" placeholder="비밀번호" required>
-                <!-- 회원가입 시에만 나타나는 필드 -->
                 <div id="signup-fields" style="display: none; width: 100%;">
                     <p class="input-hint">특수문자 1개, 영어, 숫자 포함 8자 이상</p>
                     <input type="text" id="security-answer" placeholder="비밀번호 찾기 힌트: 나의 보물 1호는?">
@@ -29,6 +29,7 @@
                     <span id="switch-text">계정이 없으신가요?</span>
                     <button id="auth-switch-btn">회원가입</button>
                 </div>
+                <p class="guest-hint" onclick="guestMode()">로그인 없이 체험하기 (데이터 저장 안됨)</p>
             </div>
         </div>
     </div>
@@ -58,7 +59,7 @@
             </div>
             <div class="couple-section">
                 <h3>커플 연동</h3>
-                <p class="input-hint">상대방의 아이디를 입력하여 연동하세요</p>
+                <p class="input-hint">상대방의 아이디를 입력하면 일정이 공유됩니다.</p>
                 <div class="input-group">
                     <input type="text" id="partner-id" placeholder="상대방 아이디">
                     <button onclick="linkCouple()">연동하기</button>
@@ -70,7 +71,6 @@
     </div>
 
     <div class="app-container">
-        <!-- 사이드바: 달력 및 요약 -->
         <aside class="sidebar">
             <header class="planner-header">
                 <h1 id="current-month-year">2024년 3월</h1>
@@ -83,16 +83,14 @@
             <div id="calendar" class="calendar"></div>
 
             <div class="monthly-summary">
-                <div class="view-toggle" id="couple-view-toggle" style="display: none;">
-                    <button id="view-mine" class="active">내 데이터</button>
-                    <button id="view-partner">파트너 데이터</button>
+                <div id="couple-badge" class="couple-badge" style="display: none;">
+                    <i class="fas fa-heart"></i> 커플 공유 모드
                 </div>
                 <h3><i class="fas fa-chart-pie"></i> 이번 달 총 지출</h3>
                 <p id="total-monthly-expense">0원</p>
             </div>
         </aside>
 
-        <!-- 메인: 상세 내역 -->
         <main class="main-content">
             <header class="detail-header">
                 <div class="header-top">
@@ -101,7 +99,7 @@
                         <span id="day-of-week">금요일</span>
                     </div>
                     <div class="header-right">
-                        <button onclick="openModal('profile-overlay')" class="icon-btn"><i class="fas fa-user-circle"></i> 프로필</button>
+                        <button id="profile-btn" onclick="openModal('profile-overlay')" class="icon-btn"><i class="fas fa-user-circle"></i> 프로필</button>
                         <button id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
                     </div>
                 </div>
@@ -111,7 +109,7 @@
             <div class="content-grid">
                 <section class="planner-section schedule-box">
                     <h3><i class="fas fa-calendar-check"></i> 오늘의 일정</h3>
-                    <div class="input-group" id="schedule-input-area">
+                    <div class="input-group">
                         <input type="text" id="schedule-input" placeholder="새로운 일정을 입력하세요">
                         <button id="add-schedule-btn"><i class="fas fa-plus"></i></button>
                     </div>
@@ -120,7 +118,7 @@
 
                 <section class="planner-section expense-box">
                     <h3><i class="fas fa-won-sign"></i> 오늘의 가계부</h3>
-                    <div class="input-group multi-input" id="expense-input-area">
+                    <div class="input-group multi-input">
                         <input type="text" id="expense-desc" placeholder="내용">
                         <input type="number" id="expense-amount" placeholder="금액">
                         <button id="add-expense-btn"><i class="fas fa-plus"></i></button>
