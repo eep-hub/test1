@@ -22,14 +22,16 @@ function init() {
     setupEventListeners();
 }
 
-// 섹션 전환 (모바일 탭)
 window.switchSection = (sectionId) => {
     document.querySelectorAll('.app-section').forEach(s => s.classList.remove('active'));
     document.getElementById(sectionId).classList.add('active');
     
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    if (sectionId === 'calendar-section') document.getElementById('nav-calendar').classList.add('active');
-    else document.getElementById('nav-detail').classList.add('active');
+    if (sectionId === 'calendar-section') {
+        document.getElementById('nav-calendar').classList.add('active');
+    } else {
+        document.getElementById('nav-detail').classList.add('active');
+    }
 };
 
 function updateUIState() {
@@ -96,30 +98,60 @@ function renderCalendar() {
     
     for (let i = 1; i <= lastDate; i++) {
         const d = document.createElement('div');
-        d.className = 'day'; d.textContent = i;
-        const dateObj = new Date(year, month, i);
-        const dayOfWeek = dateObj.getDay();
-        const holidayKey = `${month + 1}-${i}`;
+        d.className = 'day';
         
-        if (dayOfWeek === 0) d.classList.add('sunday');
-        if (dayOfWeek === 6) d.classList.add('saturday');
+        const holidayKey = `${month + 1}-${i}`;
+        const dataKey = `${year}-${month + 1}-${i}`;
+        const dayOfWeek = new Date(year, month, i).getDay();
+
+        // 1. 공휴일 이름 (최상단)
         if (holidays[holidayKey]) {
-            d.classList.add('holiday');
             const hName = document.createElement('span');
-            hName.className = 'holiday-name'; hName.textContent = holidays[holidayKey];
+            hName.className = 'holiday-name';
+            hName.textContent = holidays[holidayKey];
             d.appendChild(hName);
+            d.classList.add('holiday');
         }
 
-        const dataKey = `${year}-${month + 1}-${i}`;
+        // 2. 날짜 숫자
+        const dNum = document.createElement('span');
+        dNum.textContent = i;
+        d.appendChild(dNum);
+
+        if (dayOfWeek === 0) d.classList.add('sunday');
+        if (dayOfWeek === 6) d.classList.add('saturday');
+
+        // 3. 요약 정보 (하단)
+        const summary = document.createElement('div');
+        summary.className = 'day-summary';
+        
+        const dayData = plannerData[dataKey];
+        if (dayData) {
+            // 일정 점 표시
+            if (dayData.schedules && dayData.schedules.length > 0) {
+                const dot = document.createElement('div');
+                dot.className = 'summary-dot';
+                summary.appendChild(dot);
+            }
+            // 금액 표시
+            if (dayData.expenses && dayData.expenses.length > 0) {
+                const totalExp = dayData.expenses.reduce((acc, curr) => acc + curr.amount, 0);
+                const amountSpan = document.createElement('span');
+                amountSpan.className = 'summary-amount';
+                amountSpan.textContent = totalExp > 9999 ? (totalExp/10000).toFixed(1) + '만' : totalExp.toLocaleString();
+                summary.appendChild(amountSpan);
+            }
+        }
+        d.appendChild(summary);
+
         if (year === new Date().getFullYear() && month === new Date().getMonth() && i === new Date().getDate()) d.classList.add('today');
         if (year === selectedDate.getFullYear() && month === selectedDate.getMonth() && i === selectedDate.getDate()) d.classList.add('selected');
-        if (plannerData[dataKey] && (plannerData[dataKey].schedules?.length > 0 || plannerData[dataKey].expenses?.length > 0)) d.classList.add('has-data');
         
         d.addEventListener('click', () => {
             selectedDate = new Date(year, month, i);
             renderCalendar();
             updateDetailView();
-            switchSection('detail-section'); // 날짜 클릭 시 상세 내역으로 이동
+            switchSection('detail-section');
         });
         calendarEl.appendChild(d);
     }
@@ -189,13 +221,10 @@ function setupEventListeners() {
         e.preventDefault();
         const id = e.target.username.value;
         const pw = e.target.password.value;
-        // 로그인/회원가입 로직 (기존과 동일)
         if (users[id] && users[id].password === pw) {
             localStorage.setItem('currentUser', id);
             location.reload();
-        } else {
-            // 회원가입 모드일 경우 처리 등...
-        }
+        } else alert('정보가 틀렸습니다.');
     });
 
     document.getElementById('logout-btn').addEventListener('click', () => {
@@ -215,7 +244,7 @@ function addSchedule() {
     const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
     if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
     plannerData[key].schedules.push(input.value);
-    input.value = ''; saveData(); updateDetailView();
+    input.value = ''; saveData(); renderCalendar();
 }
 
 function addExpense() {
@@ -225,7 +254,7 @@ function addExpense() {
     const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
     if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
     plannerData[key].expenses.push({ desc: desc.value, amount: parseInt(amt.value) });
-    desc.value = ''; amt.value = ''; saveData(); updateDetailView();
+    desc.value = ''; amt.value = ''; saveData(); renderCalendar();
 }
 
 init();

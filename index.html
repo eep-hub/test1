@@ -90,8 +90,11 @@
             <!-- 섹션 2: 상세 내역 (날짜 클릭 시 이동 또는 아래에 표시) -->
             <section id="detail-section" class="app-section">
                 <div class="detail-header-mobile">
-                    <h3 id="selected-date-display">3월 1일</h3>
-                    <span id="day-of-week">금요일</span>
+                    <button class="back-btn" onclick="switchSection('calendar-section')"><i class="fas fa-arrow-left"></i></button>
+                    <div class="date-info">
+                        <h3 id="selected-date-display">3월 1일</h3>
+                        <span id="day-of-week">금요일</span>
+                    </div>
                 </div>
                 
                 <div class="mobile-grid">
