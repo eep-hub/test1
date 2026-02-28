@@ -6,7 +6,7 @@ let isGuest = (currentUser === 'guest');
 
 let currentDate = new Date();
 let selectedDate = null;
-let currentExpType = 'out'; // 'in' or 'out'
+let currentExpType = 'out';
 
 const holidays = {
     "1-1": "신정", "2-9": "설날", "2-10": "설날", "2-11": "설날", "2-12": "대체공휴일",
@@ -90,36 +90,19 @@ function renderCalendar() {
         if (dayOfWeek === 6) d.classList.add('saturday');
         if (year === new Date().getFullYear() && month === new Date().getMonth() && i === new Date().getDate()) d.classList.add('today');
         
-        // 요약 정보 (텍스트 그대로 표시)
         const summary = document.createElement('div'); summary.className = 'day-summary';
         const dayData = plannerData[dateKey];
         if (dayData) {
-            // 일정 텍스트 (최대 2개)
             if (dayData.schedules) {
                 dayData.schedules.slice(0, 2).forEach(s => {
-                    const sItem = document.createElement('div');
-                    sItem.className = 'summary-schedule';
-                    sItem.textContent = s;
-                    summary.appendChild(sItem);
+                    const sItem = document.createElement('div'); sItem.className = 'summary-schedule'; sItem.textContent = s; summary.appendChild(sItem);
                 });
             }
-            // 금액 합산 (입금/지출 구분)
             if (dayData.expenses && dayData.expenses.length > 0) {
-                const totalIn = dayData.expenses.filter(e => e.type === 'in').reduce((a, c) => a + c.amount, 0);
-                const totalOut = dayData.expenses.filter(e => e.type === 'out').reduce((a, c) => a + c.amount, 0);
-                
-                if (totalIn > 0) {
-                    const inSpan = document.createElement('span');
-                    inSpan.className = 'summary-amount amt-in';
-                    inSpan.textContent = `+${totalIn.toLocaleString()}`;
-                    summary.appendChild(inSpan);
-                }
-                if (totalOut > 0) {
-                    const outSpan = document.createElement('span');
-                    outSpan.className = 'summary-amount amt-out';
-                    outSpan.textContent = `-${totalOut.toLocaleString()}`;
-                    summary.appendChild(outSpan);
-                }
+                const tIn = dayData.expenses.filter(e => e.type === 'in').reduce((a, c) => a + c.amount, 0);
+                const tOut = dayData.expenses.filter(e => e.type === 'out').reduce((a, c) => a + c.amount, 0);
+                if (tIn > 0) { const s = document.createElement('span'); s.className = 'summary-amount amt-in'; s.textContent = `+${tIn.toLocaleString()}`; summary.appendChild(s); }
+                if (tOut > 0) { const s = document.createElement('span'); s.className = 'summary-amount amt-out'; s.textContent = `-${tOut.toLocaleString()}`; summary.appendChild(s); }
             }
         }
         d.appendChild(summary);
@@ -129,7 +112,6 @@ function renderCalendar() {
         }
 
         d.addEventListener('click', () => {
-            // 토글 로직: 같은 날짜 누르면 null로 만들어 접기
             if (selectedDate && selectedDate.getDate() === i && selectedDate.getMonth() === month) {
                 selectedDate = null;
                 document.getElementById('floating-add-btn').style.display = 'none';
@@ -141,7 +123,6 @@ function renderCalendar() {
         });
         calendarEl.appendChild(d);
 
-        // 주 확장 로직
         if (selectedDate && (dayOfWeek === 6 || i === lastDate)) {
             const weekStart = i - dayOfWeek;
             const weekEnd = i;
@@ -157,34 +138,49 @@ function injectInlineDetail(parent) {
     const template = document.getElementById('detail-template');
     const clone = template.content.cloneNode(true);
     const detailEl = clone.querySelector('.inline-detail');
-    const month = selectedDate.getMonth() + 1;
-    const date = selectedDate.getDate();
-    const dateKey = `${selectedDate.getFullYear()}-${month}-${date}`;
+    const dateKey = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
     const data = plannerData[dateKey] || { schedules: [], expenses: [] };
 
-    detailEl.querySelector('.detail-date').textContent = `${month}월 ${date}일 내역`;
     const sList = detailEl.querySelector('.s-list');
     data.schedules.forEach((s, idx) => {
         const li = document.createElement('li');
-        li.innerHTML = `<span>${s}</span><button class="delete-btn" onclick="deleteItem('${dateKey}', 'schedules', ${idx})">&times;</button>`;
+        li.innerHTML = `<span><i class="fas fa-check-circle" style="color: #7c4dff; margin-right: 8px;"></i>${s}</span><button class="delete-btn" onclick="deleteItem('${dateKey}', 'schedules', ${idx})">&times;</button>`;
         sList.appendChild(li);
     });
 
     const eList = detailEl.querySelector('.e-list');
-    let totalIn = 0, totalOut = 0;
+    let tIn = 0, tOut = 0;
     data.expenses.forEach((e, idx) => {
         const li = document.createElement('li');
         const sign = e.type === 'in' ? '+' : '-';
         const colorClass = e.type === 'in' ? 'amt-in' : 'amt-out';
-        li.innerHTML = `<span>${e.desc}</span><span class="${colorClass}">${sign}${e.amount.toLocaleString()}원 <button class="delete-btn" onclick="deleteItem('${dateKey}', 'expenses', ${idx})">&times;</button></span>`;
+        li.innerHTML = `<span><i class="fas fa-won-sign" style="color: #adb5bd; margin-right: 8px;"></i>${e.desc}</span><span class="${colorClass}">${sign}${e.amount.toLocaleString()}원 <button class="delete-btn" onclick="deleteItem('${dateKey}', 'expenses', ${idx})">&times;</button></span>`;
         eList.appendChild(li);
-        if (e.type === 'in') totalIn += e.amount; else totalOut += e.amount;
+        if (e.type === 'in') tIn += e.amount; else tOut += e.amount;
     });
-    detailEl.querySelector('.d-total-amt').textContent = (totalIn - totalOut).toLocaleString();
+    detailEl.querySelector('.d-total-amt').textContent = (tIn - tOut).toLocaleString();
     parent.appendChild(detailEl);
 }
 
-// 모달 및 입력 로직
+window.openModal = (id) => document.getElementById(id).style.display = 'flex';
+window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+
+window.openAddModal = () => { if (selectedDate) openModal('add-item-overlay'); };
+window.switchAddTab = (type) => {
+    document.getElementById('tab-s').classList.toggle('active', type === 's');
+    document.getElementById('tab-e').classList.toggle('active', type === 'e');
+    document.getElementById('form-s').style.display = type === 's' ? 'flex' : 'none';
+    document.getElementById('form-e').style.display = type === 'e' ? 'flex' : 'none';
+};
+
+window.handleAddSchedule = () => {
+    const input = document.getElementById('s-input'); if (!input.value) return;
+    const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
+    if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
+    plannerData[key].schedules.push(input.value);
+    input.value = ''; saveData(); renderCalendar(); closeModal('add-item-overlay');
+};
+
 window.switchExpType = (type) => {
     currentExpType = type;
     document.getElementById('type-out').classList.toggle('active', type === 'out');
@@ -201,31 +197,23 @@ window.handleAddExpense = () => {
     desc.value = ''; amt.value = ''; saveData(); renderCalendar(); closeModal('add-item-overlay');
 };
 
-// 나머지 함수들은 그대로... (handleAddSchedule, openAddModal 등)
-window.openAddModal = () => { if (!selectedDate) return; openModal('add-item-overlay'); };
-window.switchAddTab = (type) => {
-    document.getElementById('tab-s').classList.toggle('active', type === 's');
-    document.getElementById('tab-e').classList.toggle('active', type === 'e');
-    document.getElementById('form-s').style.display = type === 's' ? 'flex' : 'none';
-    document.getElementById('form-e').style.display = type === 'e' ? 'flex' : 'none';
-};
-window.handleAddSchedule = () => {
-    const input = document.getElementById('s-input'); if (!input.value) return;
-    const key = `${selectedDate.getFullYear()}-${selectedDate.getMonth() + 1}-${selectedDate.getDate()}`;
-    if (!plannerData[key]) plannerData[key] = { schedules: [], expenses: [] };
-    plannerData[key].schedules.push(input.value);
-    input.value = ''; saveData(); renderCalendar(); closeModal('add-item-overlay');
-};
-window.closeDetail = () => { selectedDate = null; document.getElementById('floating-add-btn').style.display = 'none'; renderCalendar(); };
 window.deleteItem = (key, type, idx) => { plannerData[key][type].splice(idx, 1); saveData(); renderCalendar(); };
+
 function updateMonthlyTotal() {
     let total = 0; const prefix = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-`;
     for (let k in plannerData) if (k.startsWith(prefix)) (plannerData[k].expenses || []).forEach(e => { if (e.type === 'in') total += e.amount; else total -= e.amount; });
     document.getElementById('total-monthly-expense').textContent = total.toLocaleString();
 }
+
 function setupEventListeners() {
-    document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); closeDetail(); };
-    document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); closeDetail(); };
+    document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); selectedDate = null; renderCalendar(); };
+    document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); selectedDate = null; renderCalendar(); };
     document.getElementById('logout-btn').onclick = () => { localStorage.setItem('currentUser', 'guest'); location.reload(); };
+    document.getElementById('auth-form').onsubmit = (e) => {
+        e.preventDefault();
+        const id = e.target.username.value; const pw = e.target.password.value;
+        if (users[id] && users[id].password === pw) { localStorage.setItem('currentUser', id); location.reload(); } else alert('틀렸습니다.');
+    };
 }
+
 init();
