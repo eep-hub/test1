@@ -8,10 +8,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- 로그인/회원가입 모달 -->
-    <div id="auth-overlay" class="auth-overlay">
+    <!-- 로그인/회원가입 모달 (기본 숨김) -->
+    <div id="auth-overlay" class="auth-overlay" style="display: none;">
         <div class="auth-box">
-            <button class="close-auth" onclick="guestMode()">&times;</button>
+            <button class="close-auth" onclick="closeModal('auth-overlay')">&times;</button>
             <h2 id="auth-title">로그인</h2>
             <p id="auth-desc">다이어리를 이용하려면 로그인해주세요</p>
             <form id="auth-form">
@@ -29,7 +29,6 @@
                     <span id="switch-text">계정이 없으신가요?</span>
                     <button id="auth-switch-btn">회원가입</button>
                 </div>
-                <p class="guest-hint" onclick="guestMode()">로그인 없이 체험하기 (데이터 저장 안됨)</p>
             </div>
         </div>
     </div>
@@ -83,9 +82,7 @@
             <div id="calendar" class="calendar"></div>
 
             <div class="monthly-summary">
-                <div id="couple-badge" class="couple-badge" style="display: none;">
-                    <i class="fas fa-heart"></i> 커플 공유 모드
-                </div>
+                <!-- 커플 배지 제거됨 -->
                 <h3><i class="fas fa-chart-pie"></i> 이번 달 총 지출</h3>
                 <p id="total-monthly-expense">0원</p>
             </div>
@@ -99,11 +96,13 @@
                         <span id="day-of-week">금요일</span>
                     </div>
                     <div class="header-right">
-                        <button id="profile-btn" onclick="openModal('profile-overlay')" class="icon-btn"><i class="fas fa-user-circle"></i> 프로필</button>
-                        <button id="logout-btn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
+                        <button id="login-nav-btn" class="login-nav-btn" onclick="openModal('auth-overlay')">로그인/회원가입</button>
+                        <button id="profile-btn" onclick="openModal('profile-overlay')" class="icon-btn" style="display: none;"><i class="fas fa-user-circle"></i> 프로필</button>
+                        <button id="logout-btn" class="logout-btn" style="display: none;"><i class="fas fa-sign-out-alt"></i> 로그아웃</button>
                     </div>
                 </div>
                 <p id="user-welcome" class="user-welcome"></p>
+                <div id="trial-badge" class="trial-badge">체험판 (데이터가 저장되지 않습니다)</div>
             </header>
 
             <div class="content-grid">
