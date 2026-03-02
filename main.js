@@ -166,6 +166,37 @@ window.openModal = (id) => document.getElementById(id).style.display = 'flex';
 window.closeModal = (id) => document.getElementById(id).style.display = 'none';
 
 window.openAddModal = () => { if (selectedDate) openModal('add-item-overlay'); };
+
+window.openDatePicker = () => {
+    const yearSelect = document.getElementById('picker-year');
+    const monthSelect = document.getElementById('picker-month');
+    const currentYear = currentDate.getFullYear();
+    
+    // 연도 옵션 생성 (현재 연도 기준 전후 10년)
+    yearSelect.innerHTML = '';
+    for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `${i}년`;
+        if (i === currentYear) opt.selected = true;
+        yearSelect.appendChild(opt);
+    }
+    
+    monthSelect.value = currentDate.getMonth();
+    openModal('date-picker-overlay');
+};
+
+window.applyPickedDate = () => {
+    const year = parseInt(document.getElementById('picker-year').value);
+    const month = parseInt(document.getElementById('picker-month').value);
+    currentDate.setDate(1); // 31일 등에서 다음달로 넘어가는 현상 방지
+    currentDate.setFullYear(year);
+    currentDate.setMonth(month);
+    selectedDate = null;
+    renderCalendar();
+    closeModal('date-picker-overlay');
+};
+
 window.switchAddTab = (type) => {
     document.getElementById('tab-s').classList.toggle('active', type === 's');
     document.getElementById('tab-e').classList.toggle('active', type === 'e');
@@ -206,8 +237,19 @@ function updateMonthlyTotal() {
 }
 
 function setupEventListeners() {
-    document.getElementById('prev-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() - 1); selectedDate = null; renderCalendar(); };
-    document.getElementById('next-month').onclick = () => { currentDate.setMonth(currentDate.getMonth() + 1); selectedDate = null; renderCalendar(); };
+    document.getElementById('prev-month').onclick = () => { 
+        currentDate.setDate(1);
+        currentDate.setMonth(currentDate.getMonth() - 1); 
+        selectedDate = null; 
+        renderCalendar(); 
+    };
+    document.getElementById('next-month').onclick = () => { 
+        currentDate.setDate(1);
+        currentDate.setMonth(currentDate.getMonth() + 1); 
+        selectedDate = null; 
+        renderCalendar(); 
+    };
+    document.getElementById('current-month-year').onclick = () => { openDatePicker(); };
     document.getElementById('logout-btn').onclick = () => { localStorage.setItem('currentUser', 'guest'); location.reload(); };
     document.getElementById('auth-form').onsubmit = (e) => {
         e.preventDefault();

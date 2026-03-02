@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ㅂ<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -54,6 +54,32 @@
                 <input type="number" id="e-amt-input" placeholder="금액 (원)">
                 <button onclick="handleAddExpense()" class="primary-btn">가계부 추가</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 년/월 선택 모달 -->
+    <div id="date-picker-overlay" class="auth-overlay" style="display: none;">
+        <div class="auth-box date-picker-box">
+            <button class="close-auth" onclick="closeModal('date-picker-overlay')">&times;</button>
+            <h2>년/월 선택</h2>
+            <div class="picker-selectors">
+                <select id="picker-year"></select>
+                <select id="picker-month">
+                    <option value="0">1월</option>
+                    <option value="1">2월</option>
+                    <option value="2">3월</option>
+                    <option value="3">4월</option>
+                    <option value="4">5월</option>
+                    <option value="5">6월</option>
+                    <option value="6">7월</option>
+                    <option value="7">8월</option>
+                    <option value="8">9월</option>
+                    <option value="9">10월</option>
+                    <option value="10">11월</option>
+                    <option value="11">12월</option>
+                </select>
+            </div>
+            <button onclick="applyPickedDate()" class="primary-btn">확인</button>
         </div>
     </div>
 
